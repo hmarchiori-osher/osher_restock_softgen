@@ -49,6 +49,7 @@ export type Database = {
       }
       branches: {
         Row: {
+          access_mode: string | null
           address: Json | null
           cnpj: string
           contact_email: string | null
@@ -62,6 +63,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          access_mode?: string | null
           address?: Json | null
           cnpj: string
           contact_email?: string | null
@@ -75,6 +77,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          access_mode?: string | null
           address?: Json | null
           cnpj?: string
           contact_email?: string | null

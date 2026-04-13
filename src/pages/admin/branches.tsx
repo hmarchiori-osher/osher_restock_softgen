@@ -18,7 +18,6 @@ import type { Tables } from "@/integrations/supabase/types";
 type Network = Tables<"networks">;
 type Branch = Tables<"branches"> & {
   networks?: Partial<Network>;
-  access_mode?: "cnpj_only" | "login_required";
 };
 
 type AddressData = {
@@ -131,7 +130,7 @@ export default function BranchesPage() {
         state: addr.state || "",
       },
       freight_options: freight,
-      access_mode: (branch.access_mode || "cnpj_only") as "cnpj_only" | "login_required",
+      access_mode: branch.access_mode as "cnpj_only" | "login_required",
     });
     setDialogOpen(true);
   }
@@ -298,8 +297,8 @@ export default function BranchesPage() {
                       )}
                     </div>
                     <div className="flex gap-2 flex-wrap">
-                      <Badge variant={(branch.access_mode || "cnpj_only") === "cnpj_only" ? "secondary" : "default"}>
-                        {(branch.access_mode || "cnpj_only") === "cnpj_only"
+                      <Badge variant={branch.access_mode === "cnpj_only" ? "secondary" : "default"}>
+                        {branch.access_mode === "cnpj_only"
                           ? "Acesso por CNPJ"
                           : "Login obrigatório"}
                       </Badge>
