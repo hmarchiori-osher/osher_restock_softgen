@@ -12,12 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { branchService } from "@/services/branchService";
 import { networkService } from "@/services/networkService";
-import { Plus, Store, Edit, Trash2, MapPin, Truck } from "lucide-react";
+import { Plus, Store, Edit, Trash2, MapPin, Truck, Building2 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Network = Tables<"networks">;
 type Branch = Tables<"branches"> & {
-  networks?: Network;
+  networks?: Partial<Network>;
   access_mode?: "cnpj_only" | "login_required";
 };
 
