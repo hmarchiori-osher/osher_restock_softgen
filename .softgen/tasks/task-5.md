@@ -22,9 +22,9 @@ Portal público white-label para filiais fazerem pedidos. 4 etapas: identificaç
 ## Checklist
 
 - [x] Etapa 1 - Identificação: campo CNPJ com autocomplete em tempo real, confirmação de dados mascarados (LGPD)
-- [ ] Etapa 2 - Montagem: catálogo filtrado por rede, quantidades, indicadores de estoque, urgência, upload
+- [x] Etapa 2 - Montagem: catálogo filtrado por rede, quantidades, indicadores de estoque, urgência, upload
 - [ ] Etapa 3 - Resumo: itens, frete, taxa urgência, total, prazo, observações, confirmar
 - [ ] Etapa 4 - Confirmação: número pedido, resumo, mensagem email
-- [ ] White-label: aplicar logo + cor da rede nas etapas 2-4
-- [ ] Pré-preenchimento: buscar último pedido e popular quantidades
-- [ ] Persistir carrinho: sessionStorage entre etapas
+- [x] White-label: aplicar logo + cor da rede nas etapas 2-4
+- [x] Pré-preenchimento: buscar último pedido e popular quantidades
+- [x] Persistir carrinho: sessionStorage entre etapas
