@@ -55,6 +55,45 @@ export const orderService = {
     return data || [];
   },
 
+  async create(orderData: {
+    branch_id: string;
+    items: Array<{ product_id: string; quantity: number; unit_price: number }>;
+    subtotal: number;
+    freight_cost: number;
+    urgency_fee: number;
+    total: number;
+    is_urgent: boolean;
+    freight_option: string;
+    observations: string | null;
+    status: string;
+    estimated_delivery_days: number;
+  }) {
+    const estimatedDelivery = new Date();
+    estimatedDelivery.setDate(estimatedDelivery.getDate() + orderData.estimated_delivery_days);
+
+    const { data, error } = await supabase
+      .from("orders")
+      .insert({
+        branch_id: orderData.branch_id,
+        items: orderData.items,
+        subtotal: orderData.subtotal,
+        freight_cost: orderData.freight_cost,
+        urgency_fee: orderData.urgency_fee,
+        total: orderData.total,
+        is_urgent: orderData.is_urgent,
+        freight_option: orderData.freight_option,
+        observations: orderData.observations,
+        status: orderData.status,
+        estimated_delivery: estimatedDelivery.toISOString(),
+      })
+      .select()
+      .single();
+
+    console.log("orderService.create:", { data, error });
+    if (error) throw error;
+    return data;
+  },
+
   async updateStatus(orderId: string, status: string) {
     const { data, error } = await supabase
       .from("orders")
