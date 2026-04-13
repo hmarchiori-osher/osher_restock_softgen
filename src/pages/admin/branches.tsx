@@ -380,8 +380,8 @@ export default function BranchesPage() {
                   <Label htmlFor="zipcode">CEP</Label>
                   <Input
                     id="zipcode"
-                    value={formData.zipcode}
-                    onChange={(e) => setFormData({ ...formData, zipcode: e.target.value })}
+                    value={formData.address.cep}
+                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address, cep: e.target.value } })}
                     placeholder="00000-000"
                     maxLength={9}
                   />
@@ -391,8 +391,8 @@ export default function BranchesPage() {
                   <Label htmlFor="street">Endereço</Label>
                   <Input
                     id="street"
-                    value={formData.street}
-                    onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                    value={formData.address.street}
+                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address, street: e.target.value } })}
                     placeholder="Rua, Avenida..."
                   />
                 </div>
@@ -401,8 +401,8 @@ export default function BranchesPage() {
                   <Label htmlFor="number">Número</Label>
                   <Input
                     id="number"
-                    value={formData.number}
-                    onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                    value={formData.address.number}
+                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address, number: e.target.value } })}
                     placeholder="123"
                   />
                 </div>
@@ -411,8 +411,8 @@ export default function BranchesPage() {
                   <Label htmlFor="complement">Complemento</Label>
                   <Input
                     id="complement"
-                    value={formData.complement}
-                    onChange={(e) => setFormData({ ...formData, complement: e.target.value })}
+                    value={formData.address.complement}
+                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address, complement: e.target.value } })}
                     placeholder="Apto, sala..."
                   />
                 </div>
@@ -421,8 +421,8 @@ export default function BranchesPage() {
                   <Label htmlFor="neighborhood">Bairro</Label>
                   <Input
                     id="neighborhood"
-                    value={formData.neighborhood}
-                    onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                    value={formData.address.neighborhood}
+                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address, neighborhood: e.target.value } })}
                     placeholder="Centro, Jardins..."
                   />
                 </div>
@@ -431,8 +431,8 @@ export default function BranchesPage() {
                   <Label htmlFor="city">Cidade</Label>
                   <Input
                     id="city"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    value={formData.address.city}
+                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address, city: e.target.value } })}
                     placeholder="São Paulo"
                   />
                 </div>
@@ -441,8 +441,8 @@ export default function BranchesPage() {
                   <Label htmlFor="state">Estado</Label>
                   <Input
                     id="state"
-                    value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    value={formData.address.state}
+                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address, state: e.target.value } })}
                     placeholder="SP"
                     maxLength={2}
                   />
