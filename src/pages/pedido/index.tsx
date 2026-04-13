@@ -181,24 +181,36 @@ export default function PedidoPage() {
                 </div>
 
                 {/* Search Results Dropdown */}
-                {searchResults.length > 1 && !selectedBranch && (
-                  <div className="border rounded-lg p-2 max-h-48 overflow-y-auto space-y-1">
+                {searchResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-card border rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
                     {searchResults.map((branch) => {
-                      const branchAddr = branch.address as any;
+                      const addr = branch.address as any;
                       return (
                         <button
                           key={branch.id}
+                          type="button"
                           onClick={() => handleSelectBranch(branch)}
-                          className="w-full text-left p-3 hover:bg-muted rounded-md transition-colors"
+                          className="w-full p-4 text-left hover:bg-muted transition-colors border-b last:border-b-0"
                         >
-                          <p className="font-medium">{branch.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatCNPJ(branch.cnpj)}
-                            {branchAddr?.city && ` • ${branchAddr.city}/${branchAddr.state}`}
-                          </p>
+                          <div className="font-medium">{formatCNPJ(branch.cnpj)}</div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {branch.name}
+                          </div>
+                          {addr?.city && addr?.state && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {addr.city} - {addr.state}
+                            </div>
+                          )}
                         </button>
                       );
                     })}
+                  </div>
+                )}
+
+                {/* No Results Message */}
+                {cnpj.replace(/\D/g, "").length >= 3 && searchResults.length === 0 && !loading && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-card border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground z-10">
+                    Nenhuma filial encontrada com este CNPJ
                   </div>
                 )}
 
