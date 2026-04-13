@@ -24,7 +24,7 @@ export const branchService = {
   async create(branch: Partial<Tables<"branches">>) {
     const { data, error } = await supabase
       .from("branches")
-      .insert(branch)
+      .insert([branch])
       .select()
       .single();
     
@@ -72,8 +72,7 @@ export const branchService = {
         id,
         cnpj,
         name,
-        city,
-        state,
+        address,
         networks (
           id,
           name,

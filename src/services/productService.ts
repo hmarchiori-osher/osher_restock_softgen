@@ -16,7 +16,7 @@ export const productService = {
   async create(product: Partial<Tables<"products">>) {
     const { data, error } = await supabase
       .from("products")
-      .insert(product)
+      .insert([product])
       .select()
       .single();
     

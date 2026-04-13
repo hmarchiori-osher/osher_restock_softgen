@@ -1,9 +1,9 @@
 ---
 title: "CRUD de Filiais e Produtos"
-status: "todo"
+status: "done"
 priority: "high"
 type: "feature"
-tags: ["admin", "crud"]
+tags: ["admin", "branches", "products"]
 created_by: "agent"
 created_at: "2026-04-13T03:23:17Z"
 position: 3

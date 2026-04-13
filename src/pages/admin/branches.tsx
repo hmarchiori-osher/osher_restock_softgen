@@ -24,6 +24,16 @@ type Branch = Tables<"branches"> & {
 
 type Network = Tables<"networks">;
 
+type AddressData = {
+  street: string;
+  number: string;
+  complement: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zipcode: string;
+};
+
 export default function BranchesPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [networks, setNetworks] = useState<Network[]>([]);
@@ -36,7 +46,7 @@ export default function BranchesPage() {
     network_id: "",
     cnpj: "",
     name: "",
-    address: "",
+    street: "",
     number: "",
     complement: "",
     neighborhood: "",
@@ -46,7 +56,7 @@ export default function BranchesPage() {
     contact_name: "",
     contact_phone: "",
     contact_email: "",
-    shipping_options: [] as Array<{ name: string; cost: number }>,
+    freight_options: [] as Array<{ name: string; cost: number }>,
   });
 
   useEffect(() => {
@@ -79,7 +89,7 @@ export default function BranchesPage() {
       network_id: "",
       cnpj: "",
       name: "",
-      address: "",
+      street: "",
       number: "",
       complement: "",
       neighborhood: "",
@@ -89,28 +99,29 @@ export default function BranchesPage() {
       contact_name: "",
       contact_phone: "",
       contact_email: "",
-      shipping_options: [],
+      freight_options: [],
     });
     setDialogOpen(true);
   }
 
   function openEditDialog(branch: Branch) {
+    const address = branch.address as AddressData | null;
     setEditingBranch(branch);
     setFormData({
       network_id: branch.network_id,
       cnpj: branch.cnpj,
       name: branch.name,
-      address: branch.address || "",
-      number: branch.number || "",
-      complement: branch.complement || "",
-      neighborhood: branch.neighborhood || "",
-      city: branch.city || "",
-      state: branch.state || "",
-      zipcode: branch.zipcode || "",
+      street: address?.street || "",
+      number: address?.number || "",
+      complement: address?.complement || "",
+      neighborhood: address?.neighborhood || "",
+      city: address?.city || "",
+      state: address?.state || "",
+      zipcode: address?.zipcode || "",
       contact_name: branch.contact_name || "",
       contact_phone: branch.contact_phone || "",
       contact_email: branch.contact_email || "",
-      shipping_options: (branch.shipping_options as Array<{ name: string; cost: number }>) || [],
+      freight_options: (branch.freight_options as Array<{ name: string; cost: number }>) || [],
     });
     setDialogOpen(true);
   }
@@ -119,21 +130,25 @@ export default function BranchesPage() {
     e.preventDefault();
 
     try {
-      const payload = {
-        network_id: formData.network_id,
-        cnpj: formData.cnpj.replace(/\D/g, ""),
-        name: formData.name,
-        address: formData.address,
+      const addressData: AddressData = {
+        street: formData.street,
         number: formData.number,
         complement: formData.complement,
         neighborhood: formData.neighborhood,
         city: formData.city,
         state: formData.state,
         zipcode: formData.zipcode.replace(/\D/g, ""),
+      };
+
+      const payload = {
+        network_id: formData.network_id,
+        cnpj: formData.cnpj.replace(/\D/g, ""),
+        name: formData.name,
+        address: addressData,
         contact_name: formData.contact_name,
         contact_phone: formData.contact_phone,
         contact_email: formData.contact_email,
-        shipping_options: formData.shipping_options,
+        freight_options: formData.freight_options,
       };
 
       if (editingBranch) {
@@ -183,6 +198,12 @@ export default function BranchesPage() {
         .replace(/(\d{4})(\d)/, "$1-$2");
     }
     return value;
+  }
+
+  function getAddressDisplay(branch: Branch): string {
+    const address = branch.address as AddressData | null;
+    if (!address) return "Endereço não cadastrado";
+    return `${address.street}, ${address.number}${address.complement ? ` - ${address.complement}` : ""} - ${address.city}/${address.state}`;
   }
 
   return (
@@ -244,19 +265,18 @@ export default function BranchesPage() {
                 <CardContent className="grid md:grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Endereço</p>
-                    <p>{branch.address}, {branch.number}</p>
-                    <p>{branch.city} - {branch.state}</p>
+                    <p>{getAddressDisplay(branch)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Contato</p>
-                    <p>{branch.contact_name}</p>
-                    <p>{branch.contact_phone}</p>
+                    <p>{branch.contact_name || "—"}</p>
+                    <p>{branch.contact_phone || "—"}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Opções de Frete</p>
-                    {Array.isArray(branch.shipping_options) && branch.shipping_options.length > 0 ? (
+                    {Array.isArray(branch.freight_options) && branch.freight_options.length > 0 ? (
                       <ul>
-                        {(branch.shipping_options as Array<{ name: string; cost: number }>).map((opt, i) => (
+                        {(branch.freight_options as Array<{ name: string; cost: number }>).map((opt, i) => (
                           <li key={i}>{opt.name}: R$ {opt.cost.toFixed(2)}</li>
                         ))}
                       </ul>
@@ -338,11 +358,11 @@ export default function BranchesPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="address">Endereço</Label>
+                  <Label htmlFor="street">Endereço</Label>
                   <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    id="street"
+                    value={formData.street}
+                    onChange={(e) => setFormData({ ...formData, street: e.target.value })}
                     placeholder="Rua, Avenida..."
                   />
                 </div>
