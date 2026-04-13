@@ -10,8 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from "@/hooks/use-toast";
 import { branchService } from "@/services/branchService";
 import { networkService } from "@/services/networkService";
-import { Plus, Building2, Edit, Trash2 } from "lucide-react";
+import { Plus, Building2, Edit, Trash2, Truck } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 
 type Branch = Tables<"branches"> & {
   networks?: {
@@ -44,19 +46,22 @@ export default function BranchesPage() {
 
   const [formData, setFormData] = useState({
     network_id: "",
-    cnpj: "",
     name: "",
-    street: "",
-    number: "",
-    complement: "",
-    neighborhood: "",
-    city: "",
-    state: "",
-    zipcode: "",
+    cnpj: "",
     contact_name: "",
-    contact_phone: "",
     contact_email: "",
-    freight_options: [] as Array<{ name: string; cost: number }>,
+    contact_phone: "",
+    address: {
+      cep: "",
+      street: "",
+      number: "",
+      complement: "",
+      neighborhood: "",
+      city: "",
+      state: "",
+    },
+    freight_options: [] as Array<{ name: string; price: number }>,
+    access_mode: "cnpj_only" as "cnpj_only" | "login_required",
   });
 
   useEffect(() => {
@@ -87,41 +92,49 @@ export default function BranchesPage() {
     setEditingBranch(null);
     setFormData({
       network_id: "",
-      cnpj: "",
       name: "",
-      street: "",
-      number: "",
-      complement: "",
-      neighborhood: "",
-      city: "",
-      state: "",
-      zipcode: "",
+      cnpj: "",
       contact_name: "",
-      contact_phone: "",
       contact_email: "",
+      contact_phone: "",
+      address: {
+        cep: "",
+        street: "",
+        number: "",
+        complement: "",
+        neighborhood: "",
+        city: "",
+        state: "",
+      },
       freight_options: [],
+      access_mode: "cnpj_only",
     });
     setDialogOpen(true);
   }
 
   function openEditDialog(branch: Branch) {
-    const address = branch.address as AddressData | null;
     setEditingBranch(branch);
+    const addr = branch.address as any || {};
+    const freight = Array.isArray(branch.freight_options) ? branch.freight_options : [];
+
     setFormData({
       network_id: branch.network_id,
-      cnpj: branch.cnpj,
       name: branch.name,
-      street: address?.street || "",
-      number: address?.number || "",
-      complement: address?.complement || "",
-      neighborhood: address?.neighborhood || "",
-      city: address?.city || "",
-      state: address?.state || "",
-      zipcode: address?.zipcode || "",
+      cnpj: branch.cnpj,
       contact_name: branch.contact_name || "",
-      contact_phone: branch.contact_phone || "",
       contact_email: branch.contact_email || "",
-      freight_options: (branch.freight_options as Array<{ name: string; cost: number }>) || [],
+      contact_phone: branch.contact_phone || "",
+      address: {
+        cep: addr.cep || "",
+        street: addr.street || "",
+        number: addr.number || "",
+        complement: addr.complement || "",
+        neighborhood: addr.neighborhood || "",
+        city: addr.city || "",
+        state: addr.state || "",
+      },
+      freight_options: freight,
+      access_mode: (branch.access_mode as "cnpj_only" | "login_required") || "cnpj_only",
     });
     setDialogOpen(true);
   }
@@ -130,25 +143,16 @@ export default function BranchesPage() {
     e.preventDefault();
 
     try {
-      const addressData: AddressData = {
-        street: formData.street,
-        number: formData.number,
-        complement: formData.complement,
-        neighborhood: formData.neighborhood,
-        city: formData.city,
-        state: formData.state,
-        zipcode: formData.zipcode.replace(/\D/g, ""),
-      };
-
       const payload = {
         network_id: formData.network_id,
-        cnpj: formData.cnpj.replace(/\D/g, ""),
         name: formData.name,
-        address: addressData,
-        contact_name: formData.contact_name,
-        contact_phone: formData.contact_phone,
-        contact_email: formData.contact_email,
-        freight_options: formData.freight_options,
+        cnpj: formData.cnpj,
+        contact_name: formData.contact_name || null,
+        contact_email: formData.contact_email || null,
+        contact_phone: formData.contact_phone || null,
+        address: formData.address,
+        freight_options: formData.freight_options.length > 0 ? formData.freight_options : null,
+        access_mode: formData.access_mode,
       };
 
       if (editingBranch) {
@@ -241,52 +245,78 @@ export default function BranchesPage() {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {branches.map((branch) => (
-              <Card key={branch.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
+            {branches.map((branch) => {
+              const addr = branch.address as AddressData | null;
+              const freight = Array.isArray(branch.freight_options) ? branch.freight_options : [];
+              return (
+                <Card key={branch.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle>{branch.name}</CardTitle>
+                        <CardDescription className="mt-1">
+                          {branch.networks?.name} • CNPJ: {formatCNPJ(branch.cnpj)}
+                        </CardDescription>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => openEditDialog(branch)}>
+                          <Edit className="w-4 h-4 mr-1" />
+                          Editar
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(branch.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="grid md:grid-cols-3 gap-4 text-sm">
                     <div>
-                      <CardTitle>{branch.name}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {branch.networks?.name} • CNPJ: {formatCNPJ(branch.cnpj)}
-                      </CardDescription>
+                      <p className="text-muted-foreground">Endereço</p>
+                      <p>{getAddressDisplay(branch)}</p>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openEditDialog(branch)}>
-                        <Edit className="w-4 h-4 mr-1" />
-                        Editar
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(branch.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                    <div className="space-y-2 text-sm">
+                      {branch.contact_name && (
+                        <p>
+                          <span className="text-muted-foreground">Contato:</span>{" "}
+                          {branch.contact_name}
+                        </p>
+                      )}
+                      {branch.contact_email && (
+                        <p className="truncate">
+                          <span className="text-muted-foreground">Email:</span>{" "}
+                          {branch.contact_email}
+                        </p>
+                      )}
+                      {branch.contact_phone && (
+                        <p>
+                          <span className="text-muted-foreground">Telefone:</span>{" "}
+                          {branch.contact_phone}
+                        </p>
+                      )}
+                      {addr?.city && addr?.state && (
+                        <p>
+                          <span className="text-muted-foreground">Localização:</span>{" "}
+                          {addr.city} - {addr.state}
+                        </p>
+                      )}
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="grid md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Endereço</p>
-                    <p>{getAddressDisplay(branch)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Contato</p>
-                    <p>{branch.contact_name || "—"}</p>
-                    <p>{branch.contact_phone || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Opções de Frete</p>
-                    {Array.isArray(branch.freight_options) && branch.freight_options.length > 0 ? (
-                      <ul>
-                        {(branch.freight_options as Array<{ name: string; cost: number }>).map((opt, i) => (
-                          <li key={i}>{opt.name}: R$ {opt.cost.toFixed(2)}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-muted-foreground text-xs">Nenhuma configurada</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="flex gap-2 flex-wrap">
+                      <Badge variant={branch.access_mode === "cnpj_only" ? "secondary" : "default"}>
+                        {branch.access_mode === "cnpj_only"
+                          ? "Acesso por CNPJ"
+                          : "Login obrigatório"}
+                      </Badge>
+                      {freight && freight.length > 0 && (
+                        <Badge variant="outline">
+                          <Truck className="w-3 h-3 mr-1" />
+                          {freight.length} opção{freight.length > 1 ? "ões" : ""} de frete
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 
@@ -446,6 +476,34 @@ export default function BranchesPage() {
                     value={formData.contact_email}
                     onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
                     placeholder="contato@filial.com"
+                  />
+                </div>
+              </div>
+
+              {/* Access Mode */}
+              <div className="space-y-3">
+                <Label>Modo de Acesso desta Filial</Label>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-0.5">
+                    <p className="font-medium">
+                      {formData.access_mode === "cnpj_only"
+                        ? "Acesso por CNPJ (sem senha)"
+                        : "Login obrigatório"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {formData.access_mode === "cnpj_only"
+                        ? "Esta filial acessa apenas com CNPJ, sem login"
+                        : "Esta filial precisa de email e senha para acessar"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.access_mode === "login_required"}
+                    onCheckedChange={(checked) =>
+                      setFormData({
+                        ...formData,
+                        access_mode: checked ? "login_required" : "cnpj_only",
+                      })
+                    }
                   />
                 </div>
               </div>

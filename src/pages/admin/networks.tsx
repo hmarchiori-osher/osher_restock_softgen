@@ -421,7 +421,7 @@ export default function NetworksPage() {
 
               {/* Access Mode */}
               <div className="space-y-3">
-                <Label>Modo de Acesso das Filiais desta Rede</Label>
+                <Label>Modo de Acesso Padrão para Novas Filiais</Label>
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="space-y-0.5">
                     <p className="font-medium">
@@ -431,8 +431,8 @@ export default function NetworksPage() {
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {formData.access_mode === "cnpj_only"
-                        ? "Todas as filiais desta rede acessam apenas com CNPJ, sem login"
-                        : "Todas as filiais desta rede precisam de email e senha para acessar"}
+                        ? "Novas filiais desta rede usarão acesso por CNPJ por padrão"
+                        : "Novas filiais desta rede usarão login obrigatório por padrão"}
                     </p>
                   </div>
                   <Switch
@@ -446,7 +446,7 @@ export default function NetworksPage() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground italic">
-                  ℹ️ Esta configuração se aplica a todas as filiais desta rede. Você não pode ter algumas filiais com senha e outras sem senha dentro da mesma rede.
+                  ℹ️ Este é apenas o padrão. Cada filial pode ter seu modo de acesso configurado individualmente.
                 </p>
               </div>
 
