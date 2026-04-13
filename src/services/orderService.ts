@@ -103,4 +103,16 @@ export const orderService = {
     if (error) throw error;
     return data || [];
   },
+
+  async getById(id: string) {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    console.log("orderService.getById:", { data, error });
+    if (error) throw error;
+    return data;
+  },
 };
