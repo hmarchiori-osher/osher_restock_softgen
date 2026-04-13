@@ -15,14 +15,15 @@ import type { Tables } from "@/integrations/supabase/types";
 type Network = Tables<"networks">;
 type Branch = Tables<"branches"> & {
   networks?: Partial<Network>;
+  access_mode?: "cnpj_only" | "login_required";
 };
 
 export default function PedidoPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [cnpj, setCnpj] = useState("");
-  const [searchResults, setSearchResults] = useState<Branch[]>([]);
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Login mode (for networks with login_required)

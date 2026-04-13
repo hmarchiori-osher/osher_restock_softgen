@@ -68,21 +68,18 @@ export const branchService = {
     return data?.[0] || null;
   },
 
-  async searchByCNPJ(cnpjPartial: string) {
+  async searchByCNPJ(cnpj: string) {
     const { data, error } = await supabase
       .from("branches")
       .select(`
-        id,
-        cnpj,
-        name,
-        address,
+        *,
         networks (
           id,
           name,
           access_mode
         )
       `)
-      .ilike("cnpj", `${cnpjPartial}%`)
+      .ilike("cnpj", `%${cnpj}%`)
       .limit(10);
     
     console.log("branchService.searchByCNPJ:", { data, error });
