@@ -32,51 +32,68 @@ export default function MontarPedidoPage() {
   const router = useRouter();
   const { toast } = useToast();
   
-  const [branch, setBranch] = useState<Branch | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [branch, setBranch] = useState<any>(null);
+  const [network, setNetwork] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [cart, setCart] = useState<Array<{ product_id: string; quantity: number }>>([]);
   const [isUrgent, setIsUrgent] = useState(false);
-  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
 
   // White-label colors
   const brandColor = branch?.networks?.brand_color || "#10B981";
 
   useEffect(() => {
+    console.log("MontarPedidoPage mounted");
     loadBranchData();
   }, []);
 
   async function loadBranchData() {
     try {
+      console.log("Loading branch data from sessionStorage");
+      
       // Recuperar dados da filial do sessionStorage
       const branchData = sessionStorage.getItem("pedido_branch");
+      console.log("Branch data from sessionStorage:", branchData);
+      
       if (!branchData) {
+        console.warn("No branch data found - redirecting to /pedido");
         toast({
-          title: "Sessão expirada",
-          description: "Por favor, identifique-se novamente",
           variant: "destructive",
+          title: "Erro",
+          description: "Nenhuma filial selecionada. Por favor, selecione uma filial.",
         });
         router.push("/pedido");
         return;
       }
 
       const parsedBranch = JSON.parse(branchData);
+      console.log("Parsed branch:", parsedBranch);
+      
       setBranch(parsedBranch);
+      setNetwork(parsedBranch.networks);
 
-      // Carregar produtos disponíveis para esta rede
-      await loadProducts(parsedBranch.network_id);
+      // Carregar produtos da rede
+      if (parsedBranch.network_id) {
+        console.log("Loading products for network:", parsedBranch.network_id);
+        await loadProducts(parsedBranch.network_id);
+      }
 
       // Tentar carregar último pedido para pré-preencher
-      await loadLastOrder(parsedBranch.id);
-    } catch (error) {
-      console.error("Error loading data:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os dados",
-        variant: "destructive",
-      });
-    } finally {
+      if (parsedBranch.id) {
+        console.log("Loading last order for branch:", parsedBranch.id);
+        await loadLastOrder(parsedBranch.id);
+      }
+
       setLoading(false);
+    } catch (error) {
+      console.error("Error loading branch data:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao carregar dados. Tente novamente.",
+      });
+      router.push("/pedido");
     }
   }
 
@@ -186,8 +203,8 @@ export default function MontarPedidoPage() {
     sessionStorage.setItem("pedido_urgent", JSON.stringify(isUrgent));
     
     // Attachment será tratado na próxima etapa (upload durante confirmação)
-    if (attachmentFile) {
-      sessionStorage.setItem("pedido_attachment_name", attachmentFile.name);
+    if (attachedFile) {
+      sessionStorage.setItem("pedido_attachment_name", attachedFile.name);
     }
 
     router.push("/pedido/resumo");
@@ -414,15 +431,15 @@ export default function MontarPedidoPage() {
                     <input
                       type="file"
                       accept=".pdf,.png,.jpg,.jpeg"
-                      onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
+                      onChange={(e) => setAttachedFile(e.target.files?.[0] || null)}
                       className="hidden"
                     />
                   </label>
                 </Button>
                 
-                {attachmentFile && (
+                {attachedFile && (
                   <p className="text-sm text-muted-foreground">
-                    {attachmentFile.name} ({(attachmentFile.size / 1024).toFixed(1)} KB)
+                    {attachedFile.name} ({(attachedFile.size / 1024).toFixed(1)} KB)
                   </p>
                 )}
               </div>
