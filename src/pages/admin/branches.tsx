@@ -5,26 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { branchService } from "@/services/branchService";
 import { networkService } from "@/services/networkService";
-import { Plus, Building2, Edit, Trash2, Truck } from "lucide-react";
+import { Plus, Store, Edit, Trash2, MapPin, Truck } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-
-type Branch = Tables<"branches"> & {
-  networks?: {
-    id: string;
-    name: string;
-    logo_url: string | null;
-    brand_color: string | null;
-  } | null;
-};
 
 type Network = Tables<"networks">;
+type Branch = Tables<"branches"> & {
+  networks?: Network;
+  access_mode?: "cnpj_only" | "login_required";
+};
 
 type AddressData = {
   street: string;
@@ -115,7 +110,9 @@ export default function BranchesPage() {
   function openEditDialog(branch: Branch) {
     setEditingBranch(branch);
     const addr = branch.address as any || {};
-    const freight = Array.isArray(branch.freight_options) ? branch.freight_options : [];
+    const freight = Array.isArray(branch.freight_options) 
+      ? (branch.freight_options as Array<{ name: string; price: number }>)
+      : [];
 
     setFormData({
       network_id: branch.network_id,
@@ -134,7 +131,7 @@ export default function BranchesPage() {
         state: addr.state || "",
       },
       freight_options: freight,
-      access_mode: (branch.access_mode as "cnpj_only" | "login_required") || "cnpj_only",
+      access_mode: (branch.access_mode || "cnpj_only") as "cnpj_only" | "login_required",
     });
     setDialogOpen(true);
   }
@@ -301,8 +298,8 @@ export default function BranchesPage() {
                       )}
                     </div>
                     <div className="flex gap-2 flex-wrap">
-                      <Badge variant={branch.access_mode === "cnpj_only" ? "secondary" : "default"}>
-                        {branch.access_mode === "cnpj_only"
+                      <Badge variant={(branch.access_mode || "cnpj_only") === "cnpj_only" ? "secondary" : "default"}>
+                        {(branch.access_mode || "cnpj_only") === "cnpj_only"
                           ? "Acesso por CNPJ"
                           : "Login obrigatório"}
                       </Badge>
