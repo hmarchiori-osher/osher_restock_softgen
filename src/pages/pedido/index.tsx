@@ -179,11 +179,9 @@ export default function PedidoPage() {
             </CardDescription>
           </CardHeader>
 
-          <CardContent>
-            {!loginMode ? (
-              // CNPJ Mode
-              <div className="space-y-6">
-                {/* CNPJ Input with Autocomplete */}
+          <CardContent className="p-6 md:p-8">
+            {!selectedBranch ? (
+              <div className="space-y-4">
                 <div className="relative">
                   <Label htmlFor="cnpj" className="text-base mb-2 block">
                     Digite o CNPJ da sua filial
@@ -196,6 +194,7 @@ export default function PedidoPage() {
                     maxLength={18}
                     className="text-lg h-14"
                     disabled={selectedBranch !== null}
+                    autoComplete="off"
                   />
 
                   {/* Search Results Dropdown - POSICIONADO PRÓXIMO AO INPUT */}
@@ -207,7 +206,11 @@ export default function PedidoPage() {
                           <button
                             key={branch.id}
                             type="button"
-                            onClick={() => handleSelectBranch(branch)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleSelectBranch(branch);
+                            }}
                             className="w-full p-4 text-left hover:bg-muted transition-colors border-b last:border-b-0"
                           >
                             <div className="font-medium">{formatCNPJ(branch.cnpj)}</div>
@@ -232,143 +235,88 @@ export default function PedidoPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            ) : (
+              <div className="p-6 border-2 border-accent rounded-lg bg-accent/5">
+                <div className="flex items-start gap-3 mb-4">
+                  <CheckCircle2 className="w-6 h-6 text-accent flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <h3 className="font-heading font-semibold text-lg mb-3">
+                      Confirme seus dados
+                    </h3>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">CNPJ:</span>{" "}
+                        <span className="font-medium">{formatCNPJ(selectedBranch.cnpj)}</span>
+                      </div>
+                      
+                      <div>
+                        <span className="text-muted-foreground">Filial:</span>{" "}
+                        <span className="font-medium">{selectedBranch.name}</span>
+                      </div>
 
-                {/* Confirmation Display - COM MÁSCARAS LGPD */}
-                {selectedBranch && (
-                  <div className="mt-6 p-6 border-2 border-accent rounded-lg bg-accent/5">
-                    <div className="flex items-start gap-3 mb-4">
-                      <CheckCircle2 className="w-6 h-6 text-accent flex-shrink-0 mt-1" />
-                      <div className="flex-1">
-                        <h3 className="font-heading font-semibold text-lg mb-3">
-                          Confirme seus dados
-                        </h3>
-                        
-                        <div className="space-y-2 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">CNPJ:</span>{" "}
-                            <span className="font-medium">{formatCNPJ(selectedBranch.cnpj)}</span>
-                          </div>
-                          
-                          <div>
-                            <span className="text-muted-foreground">Filial:</span>{" "}
-                            <span className="font-medium">{selectedBranch.name}</span>
-                          </div>
-
-                          {selectedBranch.networks?.name && (
-                            <div>
-                              <span className="text-muted-foreground">Rede:</span>{" "}
-                              <span className="font-medium">{selectedBranch.networks.name}</span>
-                            </div>
-                          )}
-
-                          {selectedBranch.address && (
-                            <div>
-                              <span className="text-muted-foreground">Endereço:</span>{" "}
-                              <span className="font-medium">{maskAddress(selectedBranch.address)}</span>
-                            </div>
-                          )}
-
-                          <div>
-                            <span className="text-muted-foreground">Contato:</span>{" "}
-                            <span className="font-medium">{selectedBranch.contact_name || "Não informado"}</span>
-                          </div>
-
-                          <div>
-                            <span className="text-muted-foreground">Email:</span>{" "}
-                            <span className="font-medium">{maskEmail(selectedBranch.contact_email)}</span>
-                          </div>
-
-                          <div>
-                            <span className="text-muted-foreground">Telefone:</span>{" "}
-                            <span className="font-medium">{maskPhone(selectedBranch.contact_phone)}</span>
-                          </div>
+                      {selectedBranch.networks?.name && (
+                        <div>
+                          <span className="text-muted-foreground">Rede:</span>{" "}
+                          <span className="font-medium">{selectedBranch.networks.name}</span>
                         </div>
+                      )}
 
-                        <p className="text-xs text-muted-foreground mt-4 italic">
-                          ℹ️ Alguns dados foram parcialmente ocultados por segurança
-                        </p>
+                      {selectedBranch.address && (
+                        <div>
+                          <span className="text-muted-foreground">Endereço:</span>{" "}
+                          <span className="font-medium">{maskAddress(selectedBranch.address)}</span>
+                        </div>
+                      )}
+
+                      <div>
+                        <span className="text-muted-foreground">Contato:</span>{" "}
+                        <span className="font-medium">{selectedBranch.contact_name || "Não informado"}</span>
+                      </div>
+
+                      <div>
+                        <span className="text-muted-foreground">Email:</span>{" "}
+                        <span className="font-medium">{maskEmail(selectedBranch.contact_email)}</span>
+                      </div>
+
+                      <div>
+                        <span className="text-muted-foreground">Telefone:</span>{" "}
+                        <span className="font-medium">{maskPhone(selectedBranch.contact_phone)}</span>
                       </div>
                     </div>
 
-                    <div className="flex gap-3 mt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedBranch(null);
-                          setCnpj("");
-                        }}
-                        className="flex-1"
-                      >
-                        Não é esta filial
-                      </Button>
-                      <Button
-                        onClick={handleConfirm}
-                        className="flex-1 bg-accent hover:bg-accent/90"
-                      >
-                        Confirmar e Continuar
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {searchResults.length === 0 && cnpj.replace(/\D/g, "").length >= 14 && (
-                  <div className="text-center p-6 border rounded-lg bg-muted/30">
-                    <p className="text-sm text-muted-foreground">
-                      CNPJ não encontrado. Entre em contato com seu fornecedor.
+                    <p className="text-xs text-muted-foreground mt-4 italic">
+                      ℹ️ Alguns dados foram parcialmente ocultados por segurança
                     </p>
                   </div>
-                )}
-              </div>
-            ) : (
-              // Login Mode
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    required
-                  />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-2">
+                <div className="flex gap-3 mt-4">
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
-                      setLoginMode(false);
-                      setEmail("");
-                      setPassword("");
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSelectedBranch(null);
+                      setCnpj("");
                     }}
                     className="flex-1"
                   >
-                    Voltar
+                    Não é esta filial
                   </Button>
                   <Button
-                    type="submit"
-                    disabled={loading}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleConfirm();
+                    }}
                     className="flex-1 bg-accent hover:bg-accent/90"
                   >
-                    {loading ? "Entrando..." : "Entrar"}
+                    Confirmar e Continuar
                   </Button>
                 </div>
-              </form>
+              </div>
             )}
           </CardContent>
         </Card>
