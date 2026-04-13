@@ -76,13 +76,11 @@ export const orderService = {
       .insert({
         branch_id: orderData.branch_id,
         items: orderData.items,
-        subtotal: orderData.subtotal,
-        freight_cost: orderData.freight_cost,
-        urgency_fee: orderData.urgency_fee,
         total: orderData.total,
-        is_urgent: orderData.is_urgent,
+        freight_cost: orderData.freight_cost,
+        urgent_fee: orderData.urgency_fee,
         freight_option: orderData.freight_option,
-        observations: orderData.observations,
+        notes: orderData.observations,
         status: orderData.status,
         estimated_delivery: estimatedDelivery.toISOString(),
       })
