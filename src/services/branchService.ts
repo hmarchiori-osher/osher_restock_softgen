@@ -72,10 +72,20 @@ export const branchService = {
     const { data, error } = await supabase
       .from("branches")
       .select(`
-        *,
+        id,
+        cnpj,
+        name,
+        contact_name,
+        contact_email,
+        contact_phone,
+        address,
+        access_mode,
+        network_id,
         networks (
           id,
           name,
+          logo_url,
+          brand_color,
           access_mode
         )
       `)
