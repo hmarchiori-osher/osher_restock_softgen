@@ -68,22 +68,38 @@ export const orderService = {
     return data;
   },
 
-  async getRecent(limit = 5) {
+  async getRecent(limit: number = 5) {
     const { data, error } = await supabase
       .from("orders")
       .select(`
         *,
         branches (
+          id,
           name,
+          cnpj,
           networks (
+            id,
             name
           )
         )
       `)
       .order("created_at", { ascending: false })
       .limit(limit);
-    
+
     console.log("orderService.getRecent:", { data, error });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getByBranch(branchId: string) {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("branch_id", branchId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    console.log("orderService.getByBranch:", { data, error });
     if (error) throw error;
     return data || [];
   },

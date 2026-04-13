@@ -86,7 +86,7 @@ export default function MontarPedidoPage() {
       
       // Filtrar produtos visíveis para esta rede
       const visibleProducts = allProducts.filter((product) => {
-        const visibility = product.visibility as string[] | null;
+        const visibility = product.visible_to_networks as string[] | null;
         // Se visibility é null ou vazio, produto é visível para todas as redes
         if (!visibility || visibility.length === 0) return true;
         // Senão, verificar se a rede está na lista
@@ -288,7 +288,7 @@ export default function MontarPedidoPage() {
             ) : (
               products.map((product) => {
                 const quantity = getCartQuantity(product.id);
-                const inStock = product.stock_quantity && product.stock_quantity > 0;
+                const inStock = product.stock && product.stock > 0;
                 const canBeUrgent = inStock && isUrgent;
 
                 return (
