@@ -10,23 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { productService } from "@/services/productService";
 import { orderService } from "@/services/orderService";
-import { Plus, Minus, ShoppingCart, Upload, Package, Zap, ArrowRight } from "lucide-react";
-import type { Tables } from "@/integrations/supabase/types";
-
-type Product = Tables<"products">;
-type Branch = Tables<"branches"> & {
-  networks?: {
-    id: string;
-    name: string;
-    logo_url: string | null;
-    brand_color: string | null;
-  };
-};
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-}
+import { Package, ShoppingCart, Plus, Minus, Upload, ArrowRight, AlertCircle } from "lucide-react";
 
 export default function MontarPedidoPage() {
   const router = useRouter();
@@ -39,9 +23,6 @@ export default function MontarPedidoPage() {
   const [isUrgent, setIsUrgent] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // White-label colors
-  const brandColor = branch?.networks?.brand_color || "#10B981";
 
   useEffect(() => {
     console.log("MontarPedidoPage mounted");
@@ -124,31 +105,24 @@ export default function MontarPedidoPage() {
   async function loadLastOrder(branchId: string) {
     try {
       const orders = await orderService.getByBranch(branchId);
+      
       if (orders.length > 0) {
-        const lastOrder = orders[0]; // Já vem ordenado por created_at DESC
+        const lastOrder = orders[0];
         const items = lastOrder.items as any[];
         
         if (items && items.length > 0) {
-          // Pré-preencher carrinho com itens do último pedido
-          const cartItems: CartItem[] = [];
+          // Pré-preencher carrinho com quantidades do último pedido
+          const cartItems = items.map(item => ({
+            product_id: item.product_id,
+            quantity: item.quantity
+          }));
           
-          for (const item of items) {
-            const product = products.find((p) => p.id === item.product_id);
-            if (product) {
-              cartItems.push({
-                product,
-                quantity: item.quantity,
-              });
-            }
-          }
+          setCart(cartItems);
           
-          if (cartItems.length > 0) {
-            setCart(cartItems);
-            toast({
-              title: "Último pedido carregado",
-              description: "Ajuste as quantidades conforme necessário",
-            });
-          }
+          toast({
+            title: "Último pedido carregado",
+            description: "As quantidades foram pré-preenchidas com base no seu último pedido.",
+          });
         }
       }
     } catch (error) {
@@ -157,317 +131,320 @@ export default function MontarPedidoPage() {
     }
   }
 
-  function updateQuantity(product: Product, delta: number) {
-    setCart((prev) => {
-      const existingIndex = prev.findIndex((item) => item.product.id === product.id);
-      
-      if (existingIndex >= 0) {
-        const newCart = [...prev];
-        const newQuantity = newCart[existingIndex].quantity + delta;
-        
-        if (newQuantity <= 0) {
-          // Remover do carrinho
-          newCart.splice(existingIndex, 1);
-        } else {
-          // Atualizar quantidade
-          newCart[existingIndex].quantity = newQuantity;
-        }
-        
-        return newCart;
-      } else if (delta > 0) {
-        // Adicionar ao carrinho
-        return [...prev, { product, quantity: delta }];
-      }
-      
-      return prev;
-    });
+  function getCartQuantity(productId: string): number {
+    const item = cart.find(i => i.product_id === productId);
+    return item?.quantity || 0;
   }
 
-  function getCartQuantity(productId: string) {
-    const item = cart.find((i) => i.product.id === productId);
-    return item?.quantity || 0;
+  function updateCartQuantity(productId: string, quantity: number) {
+    if (quantity <= 0) {
+      setCart(prev => prev.filter(item => item.product_id !== productId));
+    } else {
+      setCart(prev => {
+        const existing = prev.find(item => item.product_id === productId);
+        if (existing) {
+          return prev.map(item =>
+            item.product_id === productId ? { ...item, quantity } : item
+          );
+        } else {
+          return [...prev, { product_id: productId, quantity }];
+        }
+      });
+    }
+  }
+
+  function getCartTotal(): number {
+    return cart.reduce((total, item) => {
+      const product = products.find(p => p.id === item.product_id);
+      if (!product) return total;
+      return total + (product.price * item.quantity);
+    }, 0);
   }
 
   function handleContinue() {
     if (cart.length === 0) {
       toast({
-        title: "Carrinho vazio",
-        description: "Adicione pelo menos um produto",
         variant: "destructive",
+        title: "Carrinho vazio",
+        description: "Adicione pelo menos um produto ao carrinho.",
       });
       return;
     }
 
-    // Salvar dados do pedido no sessionStorage
+    // Salvar carrinho e configurações no sessionStorage
     sessionStorage.setItem("pedido_cart", JSON.stringify(cart));
     sessionStorage.setItem("pedido_urgent", JSON.stringify(isUrgent));
     
-    // Attachment será tratado na próxima etapa (upload durante confirmação)
-    if (attachedFile) {
-      sessionStorage.setItem("pedido_attachment_name", attachedFile.name);
-    }
-
+    // Redirecionar para resumo
     router.push("/pedido/resumo");
   }
 
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Carregando...</p>
-      </div>
+      <>
+        <SEO title="Carregando..." />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </>
     );
   }
 
+  if (!branch || !network) {
+    return null;
+  }
+
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const brandColor = network.brand_color || "#1E40AF";
+
   return (
     <>
-      <SEO title="Montar Pedido - Osher Restock" />
+      <SEO title={`Montar Pedido - ${network.name}`} />
       
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-        {/* Header com White-label */}
-        <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {branch?.networks?.logo_url && (
-                  <img
-                    src={branch.networks.logo_url}
-                    alt={branch.networks.name}
-                    className="h-10 object-contain"
-                  />
-                )}
-                <div>
-                  <h1 className="text-lg font-heading font-semibold">
-                    {branch?.name}
-                  </h1>
-                  <p className="text-xs text-muted-foreground">
-                    {branch?.networks?.name}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Indicador de carrinho */}
-              {totalItems > 0 && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-lg">
-                  <ShoppingCart className="w-5 h-5" style={{ color: brandColor }} />
-                  <span className="font-medium">{totalItems} {totalItems === 1 ? "item" : "itens"}</span>
-                </div>
+      {/* White-label Header */}
+      <div className="border-b bg-card sticky top-0 z-10 shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {network.logo_url && (
+                <img
+                  src={network.logo_url}
+                  alt={network.name}
+                  className="h-10 object-contain"
+                />
               )}
+              <div>
+                <h1 className="text-xl font-heading font-bold">{network.name}</h1>
+                <p className="text-sm text-muted-foreground">{branch.name}</p>
+              </div>
             </div>
+            
+            {cart.length > 0 && (
+              <Badge 
+                className="h-10 px-4 text-base"
+                style={{ backgroundColor: brandColor }}
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                {cartItemCount} {cartItemCount === 1 ? "item" : "itens"}
+              </Badge>
+            )}
           </div>
-        </header>
+        </div>
+      </div>
 
-        {/* Content */}
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
-          <div className="mb-6">
-            <h2 className="text-2xl font-heading font-bold mb-2">Monte seu Pedido</h2>
-            <p className="text-muted-foreground">
-              Selecione os produtos e quantidades desejadas
-            </p>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted py-8">
+        <div className="container mx-auto px-4 max-w-6xl">
+          {/* Progress Indicator */}
+          <div className="mb-8 flex items-center justify-center gap-2 text-sm">
+            <span className="text-muted-foreground">Etapa 2 de 4:</span>
+            <span className="font-semibold">Montar Pedido</span>
           </div>
 
-          {/* Opções de Entrega */}
+          {/* Options */}
           <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Opções de Entrega</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Zap className="w-5 h-5" style={{ color: brandColor }} />
-                  <div>
-                    <p className="font-medium">Entrega Urgente (mesmo dia)</p>
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row gap-6">
+                {/* Urgency Toggle */}
+                <div className="flex-1 flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-1">
+                    <Label className="text-base font-semibold">Entrega Urgente</Label>
                     <p className="text-sm text-muted-foreground">
-                      Disponível apenas para produtos em estoque
+                      +15% no valor total • Prazo reduzido
                     </p>
                   </div>
+                  <Switch
+                    checked={isUrgent}
+                    onCheckedChange={setIsUrgent}
+                  />
                 </div>
-                <Switch
-                  checked={isUrgent}
-                  onCheckedChange={setIsUrgent}
-                />
+
+                {/* File Upload */}
+                <div className="flex-1">
+                  <Label htmlFor="file-upload" className="text-base font-semibold mb-2 block">
+                    Anexar Pedido de Compra (opcional)
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="file-upload"
+                      type="file"
+                      onChange={(e) => setAttachedFile(e.target.files?.[0] || null)}
+                      className="cursor-pointer"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                    />
+                    {attachedFile && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        ✓ {attachedFile.name}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Catálogo de Produtos */}
-          <div className="grid gap-4 mb-6">
+          {/* Products Grid */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-heading font-bold">Produtos Disponíveis</h2>
+              <p className="text-sm text-muted-foreground">
+                {products.length} {products.length === 1 ? "produto" : "produtos"}
+              </p>
+            </div>
+
             {products.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
                   <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">
-                    Nenhum produto disponível para sua rede
+                    Nenhum produto disponível para esta rede no momento.
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              products.map((product) => {
-                const quantity = getCartQuantity(product.id);
-                const inStock = product.stock && product.stock > 0;
-                const canBeUrgent = inStock && isUrgent;
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {products.map((product) => {
+                  const quantity = getCartQuantity(product.id);
+                  const inStock = product.stock && product.stock > 0;
+                  const canBeUrgent = inStock && isUrgent;
 
-                return (
-                  <Card key={product.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex gap-6">
-                        {/* Product Image */}
+                  return (
+                    <Card key={product.id} className="hover:shadow-lg transition-shadow">
+                      <CardHeader className="p-4">
                         {product.photo_url && (
-                          <div className="flex-shrink-0">
+                          <div className="aspect-square mb-3 rounded-lg overflow-hidden bg-muted">
                             <img
                               src={product.photo_url}
                               alt={product.name}
-                              className="w-24 h-24 object-cover rounded border"
+                              className="w-full h-full object-cover"
                             />
                           </div>
                         )}
-
-                        {/* Product Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4 mb-2">
-                            <div className="flex-1">
-                              <h3 className="font-heading font-semibold text-lg">
-                                {product.name}
-                              </h3>
-                              {product.description && (
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {product.description}
-                                </p>
-                              )}
-                              {product.sku && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  SKU: {product.sku}
-                                </p>
-                              )}
-                            </div>
-                            
-                            <div className="text-right flex-shrink-0">
-                              <p className="text-2xl font-bold" style={{ color: brandColor }}>
-                                R$ {(product.price || 0).toFixed(2)}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                por {product.unit || "unidade"}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Stock Status */}
-                          <div className="flex items-center gap-2 mb-4">
-                            {inStock ? (
-                              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                                🟢 Em estoque — entrega em 2 dias úteis
-                              </Badge>
-                            ) : (
-                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                                🟡 Sob encomenda — entrega em 5 a 7 dias úteis
-                              </Badge>
-                            )}
-                            
-                            {canBeUrgent && (
-                              <Badge style={{ backgroundColor: brandColor, color: "white" }}>
-                                ⚡ Disponível para entrega urgente
-                              </Badge>
-                            )}
-                          </div>
-
-                          {/* Quantity Controls */}
-                          <div className="flex items-center gap-3">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => updateQuantity(product, -1)}
-                              disabled={quantity === 0}
-                            >
-                              <Minus className="w-4 h-4" />
-                            </Button>
-                            
-                            <Input
-                              type="number"
-                              value={quantity}
-                              onChange={(e) => {
-                                const newQty = parseInt(e.target.value) || 0;
-                                updateQuantity(product, newQty - quantity);
-                              }}
-                              className="w-20 text-center"
-                              min="0"
-                            />
-                            
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => updateQuantity(product, 1)}
-                              style={quantity > 0 ? { borderColor: brandColor, color: brandColor } : {}}
-                            >
-                              <Plus className="w-4 h-4" />
-                            </Button>
-
-                            {quantity > 0 && (
-                              <span className="text-sm font-medium ml-2">
-                                Subtotal: R$ {((product.price || 0) * quantity).toFixed(2)}
-                              </span>
-                            )}
-                          </div>
+                        
+                        <div className="space-y-1">
+                          <CardTitle className="text-lg leading-tight">
+                            {product.name}
+                          </CardTitle>
+                          {product.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {product.description}
+                            </p>
+                          )}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
+
+                        <div className="flex items-center justify-between mt-3">
+                          <div>
+                            <p className="text-2xl font-bold" style={{ color: brandColor }}>
+                              R$ {product.price.toFixed(2)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              por {product.unit}
+                            </p>
+                          </div>
+                          {product.sku && (
+                            <Badge variant="outline" className="text-xs">
+                              {product.sku}
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Stock Indicator */}
+                        <div className="mt-2">
+                          {inStock ? (
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                              <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5" />
+                              Em estoque • 2 dias
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                              <div className="w-2 h-2 rounded-full bg-yellow-500 mr-1.5" />
+                              Sob encomenda • 5-7 dias
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Urgency Warning */}
+                        {!inStock && isUrgent && (
+                          <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-800 flex items-start gap-1">
+                            <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                            <span>Este produto não está disponível para entrega urgente</span>
+                          </div>
+                        )}
+                      </CardHeader>
+
+                      <CardContent className="p-4 pt-0">
+                        {/* Quantity Controls */}
+                        <div className="flex items-center gap-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateCartQuantity(product.id, quantity - 1)}
+                            disabled={quantity === 0}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                          
+                          <Input
+                            type="number"
+                            min="0"
+                            value={quantity}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value) || 0;
+                              updateCartQuantity(product.id, val);
+                            }}
+                            className="text-center h-9 w-20"
+                          />
+
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateCartQuantity(product.id, quantity + 1)}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {quantity > 0 && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            Subtotal: <span className="font-semibold">R$ {(product.price * quantity).toFixed(2)}</span>
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             )}
           </div>
 
-          {/* Anexar Pedido de Compra */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Anexar Pedido de Compra (Opcional)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <Button variant="outline" asChild className="cursor-pointer">
-                  <label>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Selecionar arquivo
-                    <input
-                      type="file"
-                      accept=".pdf,.png,.jpg,.jpeg"
-                      onChange={(e) => setAttachedFile(e.target.files?.[0] || null)}
-                      className="hidden"
-                    />
-                  </label>
-                </Button>
-                
-                {attachedFile && (
-                  <p className="text-sm text-muted-foreground">
-                    {attachedFile.name} ({(attachedFile.size / 1024).toFixed(1)} KB)
+          {/* Cart Summary & Continue */}
+          <Card className="mt-8 sticky bottom-4">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total do Pedido</p>
+                  <p className="text-3xl font-bold" style={{ color: brandColor }}>
+                    R$ {getCartTotal().toFixed(2)}
                   </p>
-                )}
+                  {cart.length > 0 && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {cartItemCount} {cartItemCount === 1 ? "item" : "itens"} no carrinho
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  size="lg"
+                  onClick={handleContinue}
+                  disabled={cart.length === 0}
+                  style={{ backgroundColor: cart.length > 0 ? brandColor : undefined }}
+                  className="text-lg px-8"
+                >
+                  Continuar para Resumo
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                PDF, PNG ou JPG até 5MB
-              </p>
             </CardContent>
           </Card>
-
-          {/* Actions */}
-          <div className="flex gap-4">
-            <Button
-              variant="outline"
-              onClick={() => router.push("/pedido")}
-              className="flex-1"
-            >
-              Voltar
-            </Button>
-            <Button
-              onClick={handleContinue}
-              disabled={cart.length === 0}
-              className="flex-1"
-              style={{ backgroundColor: brandColor }}
-            >
-              Continuar para Resumo
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
         </div>
       </div>
     </>
