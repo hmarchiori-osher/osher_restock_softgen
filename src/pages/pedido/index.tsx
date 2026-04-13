@@ -138,6 +138,27 @@ export default function PedidoPage() {
     return value;
   }
 
+  // Funções de máscara para LGPD
+  function maskEmail(email: string | null | undefined) {
+    if (!email) return "Não informado";
+    const [user, domain] = email.split("@");
+    if (!domain) return "***@***";
+    const maskedUser = user.slice(0, 2) + "***";
+    return `${maskedUser}@${domain}`;
+  }
+
+  function maskPhone(phone: string | null | undefined) {
+    if (!phone) return "Não informado";
+    const numbers = phone.replace(/\D/g, "");
+    if (numbers.length < 8) return "***";
+    return phone.slice(0, -4) + "****";
+  }
+
+  function maskAddress(address: any) {
+    if (!address?.street) return "***";
+    return `${address.street}, *** - ${address.neighborhood || "***"}`;
+  }
+
   const addr = selectedBranch?.address as any;
 
   return (
@@ -162,93 +183,132 @@ export default function PedidoPage() {
             {!loginMode ? (
               // CNPJ Mode
               <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="cnpj">CNPJ da Filial</Label>
-                  <div className="relative">
-                    <Input
-                      id="cnpj"
-                      value={cnpj}
-                      onChange={(e) => handleCNPJChange(e.target.value)}
-                      placeholder="00.000.000/0000-00"
-                      maxLength={18}
-                      className="pr-10"
-                    />
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Digite o CNPJ para buscar sua filial
-                  </p>
+                {/* CNPJ Input with Autocomplete */}
+                <div className="relative">
+                  <Label htmlFor="cnpj" className="text-base mb-2 block">
+                    Digite o CNPJ da sua filial
+                  </Label>
+                  <Input
+                    id="cnpj"
+                    value={cnpj}
+                    onChange={(e) => handleCNPJChange(e.target.value)}
+                    placeholder="00.000.000/0000-00"
+                    maxLength={18}
+                    className="text-lg h-14"
+                    disabled={selectedBranch !== null}
+                  />
+
+                  {/* Search Results Dropdown - POSICIONADO PRÓXIMO AO INPUT */}
+                  {searchResults.length > 0 && !selectedBranch && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-card border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                      {searchResults.map((branch) => {
+                        const addr = branch.address as any;
+                        return (
+                          <button
+                            key={branch.id}
+                            type="button"
+                            onClick={() => handleSelectBranch(branch)}
+                            className="w-full p-4 text-left hover:bg-muted transition-colors border-b last:border-b-0"
+                          >
+                            <div className="font-medium">{formatCNPJ(branch.cnpj)}</div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {branch.name}
+                            </div>
+                            {addr?.city && addr?.state && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {addr.city} - {addr.state}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* No Results Message */}
+                  {cnpj.replace(/\D/g, "").length >= 3 && searchResults.length === 0 && !loading && !selectedBranch && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-card border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground z-50">
+                      Nenhuma filial encontrada com este CNPJ
+                    </div>
+                  )}
                 </div>
 
-                {/* Search Results Dropdown */}
-                {searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-card border rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
-                    {searchResults.map((branch) => {
-                      const addr = branch.address as any;
-                      return (
-                        <button
-                          key={branch.id}
-                          type="button"
-                          onClick={() => handleSelectBranch(branch)}
-                          className="w-full p-4 text-left hover:bg-muted transition-colors border-b last:border-b-0"
-                        >
-                          <div className="font-medium">{formatCNPJ(branch.cnpj)}</div>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {branch.name}
+                {/* Confirmation Display - COM MÁSCARAS LGPD */}
+                {selectedBranch && (
+                  <div className="mt-6 p-6 border-2 border-accent rounded-lg bg-accent/5">
+                    <div className="flex items-start gap-3 mb-4">
+                      <CheckCircle2 className="w-6 h-6 text-accent flex-shrink-0 mt-1" />
+                      <div className="flex-1">
+                        <h3 className="font-heading font-semibold text-lg mb-3">
+                          Confirme seus dados
+                        </h3>
+                        
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">CNPJ:</span>{" "}
+                            <span className="font-medium">{formatCNPJ(selectedBranch.cnpj)}</span>
                           </div>
-                          {addr?.city && addr?.state && (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {addr.city} - {addr.state}
+                          
+                          <div>
+                            <span className="text-muted-foreground">Filial:</span>{" "}
+                            <span className="font-medium">{selectedBranch.name}</span>
+                          </div>
+
+                          {selectedBranch.networks?.name && (
+                            <div>
+                              <span className="text-muted-foreground">Rede:</span>{" "}
+                              <span className="font-medium">{selectedBranch.networks.name}</span>
                             </div>
                           )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
 
-                {/* No Results Message */}
-                {cnpj.replace(/\D/g, "").length >= 3 && searchResults.length === 0 && !loading && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-card border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground z-10">
-                    Nenhuma filial encontrada com este CNPJ
-                  </div>
-                )}
+                          {selectedBranch.address && (
+                            <div>
+                              <span className="text-muted-foreground">Endereço:</span>{" "}
+                              <span className="font-medium">{maskAddress(selectedBranch.address)}</span>
+                            </div>
+                          )}
 
-                {/* Selected Branch Confirmation */}
-                {selectedBranch && (
-                  <div className="border border-accent/50 bg-accent/5 rounded-lg p-4 space-y-3">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-accent mt-0.5" />
-                      <div className="flex-1">
-                        <p className="font-medium">Filial encontrada!</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Confirme se são suas informações:
+                          <div>
+                            <span className="text-muted-foreground">Contato:</span>{" "}
+                            <span className="font-medium">{selectedBranch.contact_name || "Não informado"}</span>
+                          </div>
+
+                          <div>
+                            <span className="text-muted-foreground">Email:</span>{" "}
+                            <span className="font-medium">{maskEmail(selectedBranch.contact_email)}</span>
+                          </div>
+
+                          <div>
+                            <span className="text-muted-foreground">Telefone:</span>{" "}
+                            <span className="font-medium">{maskPhone(selectedBranch.contact_phone)}</span>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-muted-foreground mt-4 italic">
+                          ℹ️ Alguns dados foram parcialmente ocultados por segurança
                         </p>
                       </div>
                     </div>
 
-                    <div className="ml-8 space-y-1 text-sm">
-                      <p><strong>Nome:</strong> {selectedBranch.name}</p>
-                      <p><strong>CNPJ:</strong> {formatCNPJ(selectedBranch.cnpj)}</p>
-                      {selectedBranch.networks?.name && (
-                        <p><strong>Rede:</strong> {selectedBranch.networks.name}</p>
-                      )}
-                      {addr?.street && (
-                        <p>
-                          <strong>Endereço:</strong> {addr.street}, {addr.number}
-                          {addr.complement && ` - ${addr.complement}`}
-                          {addr.city && `, ${addr.city}/${addr.state}`}
-                        </p>
-                      )}
+                    <div className="flex gap-3 mt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedBranch(null);
+                          setCnpj("");
+                        }}
+                        className="flex-1"
+                      >
+                        Não é esta filial
+                      </Button>
+                      <Button
+                        onClick={handleConfirm}
+                        className="flex-1 bg-accent hover:bg-accent/90"
+                      >
+                        Confirmar e Continuar
+                      </Button>
                     </div>
-
-                    <Button 
-                      onClick={handleConfirm}
-                      className="w-full bg-accent hover:bg-accent/90 mt-4"
-                    >
-                      Confirmar e continuar
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
                   </div>
                 )}
 
