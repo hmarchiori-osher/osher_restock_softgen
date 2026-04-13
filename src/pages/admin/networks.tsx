@@ -74,7 +74,7 @@ export default function NetworksPage() {
     setEditingNetwork(network);
     setFormData({
       name: network.name,
-      cnpj: network.cnpj,
+      cnpj: network.cnpj_matriz,
       contact_name: network.contact_name || "",
       contact_email: network.contact_email || "",
       contact_phone: network.contact_phone || "",
@@ -98,7 +98,13 @@ export default function NetworksPage() {
       }
 
       const payload = {
-        ...formData,
+        name: formData.name,
+        cnpj_matriz: formData.cnpj,
+        contact_name: formData.contact_name,
+        contact_email: formData.contact_email,
+        contact_phone: formData.contact_phone,
+        brand_color: formData.brand_color,
+        access_mode: formData.access_mode,
         logo_url: logoUrl,
       };
 
@@ -206,7 +212,7 @@ export default function NetworksPage() {
                       )}
                       <CardTitle className="text-xl">{network.name}</CardTitle>
                       <CardDescription className="mt-1">
-                        CNPJ: {formatCNPJ(network.cnpj)}
+                        CNPJ: {formatCNPJ(network.cnpj_matriz)}
                       </CardDescription>
                     </div>
                     {network.brand_color && (
