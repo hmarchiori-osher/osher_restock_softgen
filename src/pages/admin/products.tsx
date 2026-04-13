@@ -32,7 +32,7 @@ export default function ProductsPage() {
     sku: "",
     price: "",
     unit: "rolo",
-    stock_quantity: "",
+    stock: "",
     photo_url: "",
     visible_to_networks: [] as string[],
   });
@@ -69,7 +69,7 @@ export default function ProductsPage() {
       sku: "",
       price: "",
       unit: "rolo",
-      stock_quantity: "",
+      stock: "",
       photo_url: "",
       visible_to_networks: [],
     });
@@ -84,7 +84,7 @@ export default function ProductsPage() {
       sku: product.sku,
       price: product.price.toString(),
       unit: product.unit,
-      stock_quantity: product.stock_quantity.toString(),
+      stock: product.stock.toString(),
       photo_url: product.photo_url || "",
       visible_to_networks: Array.isArray(product.visible_to_networks) ? product.visible_to_networks : [],
     });
@@ -101,7 +101,7 @@ export default function ProductsPage() {
         sku: formData.sku,
         price: parseFloat(formData.price),
         unit: formData.unit,
-        stock_quantity: parseInt(formData.stock_quantity),
+        stock: parseInt(formData.stock),
         photo_url: formData.photo_url || null,
         visible_to_networks: formData.visible_to_networks.length > 0 ? formData.visible_to_networks : null,
       };
@@ -218,16 +218,16 @@ export default function ProductsPage() {
                     <div className="col-span-2">
                       <span className="text-muted-foreground">Estoque:</span>
                       <p className="font-semibold">
-                        {product.stock_quantity} {product.unit}
-                        {product.stock_quantity > 0 ? "s" : ""}
+                        {product.stock} {product.unit}
+                        {product.stock > 0 ? "s" : ""}
                       </p>
-                      {product.stock_quantity <= 10 && product.stock_quantity > 0 && (
+                      {product.stock <= 10 && product.stock > 0 && (
                         <Badge variant="destructive" className="mt-1">
                           <AlertCircle className="w-3 h-3 mr-1" />
                           Estoque baixo
                         </Badge>
                       )}
-                      {product.stock_quantity === 0 && (
+                      {product.stock === 0 && (
                         <Badge variant="secondary" className="mt-1">
                           Sob encomenda
                         </Badge>
@@ -344,8 +344,8 @@ export default function ProductsPage() {
                     id="stock"
                     type="number"
                     min="0"
-                    value={formData.stock_quantity}
-                    onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                     placeholder="0"
                     required
                   />
