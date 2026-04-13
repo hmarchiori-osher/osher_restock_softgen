@@ -1,5 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
+
+type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];
+type ProductUpdate = Database["public"]["Tables"]["products"]["Update"];
 
 export const productService = {
   async list() {
@@ -13,10 +16,10 @@ export const productService = {
     return data || [];
   },
 
-  async create(product: Partial<Tables<"products">>) {
+  async create(product: ProductInsert) {
     const { data, error } = await supabase
       .from("products")
-      .insert([product])
+      .insert(product)
       .select()
       .single();
     
@@ -25,7 +28,7 @@ export const productService = {
     return data;
   },
 
-  async update(id: string, product: Partial<Tables<"products">>) {
+  async update(id: string, product: ProductUpdate) {
     const { data, error } = await supabase
       .from("products")
       .update(product)

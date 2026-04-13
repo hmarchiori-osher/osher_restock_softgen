@@ -1,5 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
+
+type BranchInsert = Database["public"]["Tables"]["branches"]["Insert"];
+type BranchUpdate = Database["public"]["Tables"]["branches"]["Update"];
 
 export const branchService = {
   async list() {
@@ -21,10 +24,10 @@ export const branchService = {
     return data || [];
   },
 
-  async create(branch: Partial<Tables<"branches">>) {
+  async create(branch: BranchInsert) {
     const { data, error } = await supabase
       .from("branches")
-      .insert([branch])
+      .insert(branch)
       .select()
       .single();
     
@@ -33,7 +36,7 @@ export const branchService = {
     return data;
   },
 
-  async update(id: string, branch: Partial<Tables<"branches">>) {
+  async update(id: string, branch: BranchUpdate) {
     const { data, error } = await supabase
       .from("branches")
       .update(branch)
