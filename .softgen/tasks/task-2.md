@@ -1,9 +1,9 @@
 ---
 title: "Dashboard Admin + CRUD de Redes"
-status: "todo"
+status: "done"
 priority: "high"
 type: "feature"
-tags: ["admin", "dashboard"]
+tags: ["admin", "networks"]
 created_by: "agent"
 created_at: "2026-04-13T03:23:17Z"
 position: 2
