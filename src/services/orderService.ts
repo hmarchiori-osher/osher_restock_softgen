@@ -32,19 +32,57 @@ export const orderService = {
     return stats;
   },
 
-  async getRecent(limit: number = 5) {
+  async list() {
     const { data, error } = await supabase
       .from("orders")
       .select(`
         *,
-        branches!orders_branch_id_fkey (
+        branches (
+          id,
           name,
-          networks!branches_network_id_fkey (name)
+          cnpj,
+          networks (
+            id,
+            name,
+            logo_url
+          )
+        )
+      `)
+      .order("created_at", { ascending: false });
+    
+    console.log("orderService.list:", { data, error });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async updateStatus(orderId: string, status: string) {
+    const { data, error } = await supabase
+      .from("orders")
+      .update({ status })
+      .eq("id", orderId)
+      .select()
+      .single();
+    
+    console.log("orderService.updateStatus:", { data, error });
+    if (error) throw error;
+    return data;
+  },
+
+  async getRecent(limit = 5) {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(`
+        *,
+        branches (
+          name,
+          networks (
+            name
+          )
         )
       `)
       .order("created_at", { ascending: false })
       .limit(limit);
-
+    
     console.log("orderService.getRecent:", { data, error });
     if (error) throw error;
     return data || [];
