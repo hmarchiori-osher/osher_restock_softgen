@@ -25,7 +25,7 @@ Profissionalismo B2B com toque white-label. Painel admin denso/funcional, portal
 
 ## Features
 
-**Admin (retaguarda):**
+**Admin (retaguarda):** ✅ IMPLEMENTADO
 - Autenticação email/senha
 - Dashboard: métricas do mês, pedidos pendentes, últimas atividades
 - CRUD Redes: nome, CNPJ matriz, contato, logo (upload), cor da marca (hex), modo de acesso (toggle: "CNPJ sem senha" vs "Login com senha")
@@ -34,7 +34,7 @@ Profissionalismo B2B com toque white-label. Painel admin denso/funcional, portal
 - Gestão de Pedidos: lista com filtros (rede/filial/status/data), detalhes, anexo, atualizar status (Novo → Confirmado → Em separação → Enviado → Entregue)
 - Configurações: quantidade mínima frete grátis, taxa urgência, prazos padrão
 
-**Filial (portal público):**
+**Filial (portal público):** 🚧 EM DESENVOLVIMENTO
 - Etapa 1 — Identificação: se rede = "sem senha" → autocomplete CNPJ + confirmação de dados; se rede = "com senha" → login email/senha. Link direto opcional (pular etapa).
 - Etapa 2 — Montagem do pedido: catálogo de produtos da rede, pré-preenchido com último pedido (se existir), indicadores de estoque (em estoque/sob encomenda), opção urgência, upload de arquivo (pedido de compra).
 - Etapa 3 — Resumo: itens, frete, taxa urgência, total, prazo estimado, observações, confirmar.
