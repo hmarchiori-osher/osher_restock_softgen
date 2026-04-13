@@ -1,6 +1,6 @@
 ---
 title: "Portal Público da Filial - Fluxo de Pedido"
-status: "in_progress"
+status: "done"
 priority: "urgent"
 type: "feature"
 tags: ["filial", "public", "pedido"]
@@ -23,8 +23,8 @@ Portal público white-label para filiais fazerem pedidos. 4 etapas: identificaç
 
 - [x] Etapa 1 - Identificação: campo CNPJ com autocomplete em tempo real, confirmação de dados mascarados (LGPD)
 - [x] Etapa 2 - Montagem: catálogo filtrado por rede, quantidades, indicadores de estoque, urgência, upload
-- [ ] Etapa 3 - Resumo: itens, frete, taxa urgência, total, prazo, observações, confirmar
-- [ ] Etapa 4 - Confirmação: número pedido, resumo, mensagem email
+- [x] Etapa 3 - Resumo: itens, frete, taxa urgência, total, prazo, observações, confirmar
+- [x] Etapa 4 - Confirmação: número pedido, resumo, mensagem email
 - [x] White-label: aplicar logo + cor da rede nas etapas 2-4
 - [x] Pré-preenchimento: buscar último pedido e popular quantidades
 - [x] Persistir carrinho: sessionStorage entre etapas
