@@ -9,7 +9,8 @@ import {
   Package, 
   ShoppingCart, 
   Settings,
-  LogOut
+  LogOut,
+  Store
 } from "lucide-react";
 import { authService } from "@/services/authService";
 
