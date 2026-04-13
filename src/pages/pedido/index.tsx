@@ -57,26 +57,48 @@ export default function PedidoPage() {
     }
   }
 
-  function handleSelectBranch(branch: Branch) {
-    setSelectedBranch(branch);
-    setCnpj(formatCNPJ(branch.cnpj));
-    setSearchResults([]);
+  function handleSelectBranch(branch: any) {
+    console.log("handleSelectBranch called with:", branch);
+    
+    try {
+      setSelectedBranch(branch);
+      setCnpj(formatCNPJ(branch.cnpj));
+      setSearchResults([]);
+      console.log("Branch selected successfully:", branch.id);
+    } catch (error) {
+      console.error("Error in handleSelectBranch:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao selecionar filial. Tente novamente.",
+      });
+    }
   }
 
   function handleConfirm() {
-    if (!selectedBranch) return;
-
-    // Check if branch requires login
-    if (selectedBranch.access_mode === "login_required") {
-      setLoginMode(true);
+    console.log("handleConfirm called");
+    
+    if (!selectedBranch) {
+      console.warn("No branch selected");
       return;
     }
-
-    // If CNPJ-only access, proceed directly
-    router.push({
-      pathname: "/pedido/montar",
-      query: { branchId: selectedBranch.id },
-    });
+    
+    try {
+      // Armazenar dados da filial no sessionStorage para próximas etapas
+      console.log("Storing branch data:", selectedBranch);
+      sessionStorage.setItem("pedido_branch", JSON.stringify(selectedBranch));
+      
+      // Redirecionar para montagem do pedido
+      console.log("Redirecting to /pedido/montar");
+      router.push("/pedido/montar");
+    } catch (error) {
+      console.error("Error in handleConfirm:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao confirmar. Tente novamente.",
+      });
+    }
   }
 
   async function handleLogin(e: React.FormEvent) {
