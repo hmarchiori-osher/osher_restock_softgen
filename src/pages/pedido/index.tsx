@@ -100,6 +100,32 @@ export default function PedidoPage() {
     }
   }
 
+  async function handleCNPJChange(value: string) {
+    const formatted = formatCNPJ(value);
+    setCnpj(formatted);
+    
+    const numbers = value.replace(/\D/g, "");
+    
+    if (numbers.length >= 3) {
+      try {
+        console.log("Searching CNPJ:", numbers);
+        const results = await branchService.searchByCNPJ(numbers);
+        console.log("Search results:", results);
+        setSearchResults(results);
+      } catch (error: any) {
+        console.error("Error searching CNPJ:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao buscar",
+          description: error.message || "Não foi possível buscar filiais",
+        });
+        setSearchResults([]);
+      }
+    } else {
+      setSearchResults([]);
+    }
+  }
+
   function formatCNPJ(value: string) {
     const numbers = value.replace(/\D/g, "");
     if (numbers.length <= 14) {
@@ -142,7 +168,7 @@ export default function PedidoPage() {
                     <Input
                       id="cnpj"
                       value={cnpj}
-                      onChange={(e) => setCnpj(formatCNPJ(e.target.value))}
+                      onChange={(e) => handleCNPJChange(e.target.value)}
                       placeholder="00.000.000/0000-00"
                       maxLength={18}
                       className="pr-10"
