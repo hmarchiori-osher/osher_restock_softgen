@@ -20,11 +20,44 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const { user } = await authService.signIn(email, password);
+      const { user, error: signInError } = await authService.signIn(email, password);
       
-      const { data: profile } = await authService.getProfile(user.id);
+      if (signInError || !user) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao fazer login",
+          description: signInError?.message || "Email ou senha incorretos.",
+        });
+        return;
+      }
+
+      console.log("Login successful, user:", user);
+
+      const { data: profile, error: profileError } = await authService.getProfile(user.id);
       
-      if (profile?.role !== "admin") {
+      console.log("Profile fetch result:", { profile, profileError });
+
+      if (profileError) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar perfil",
+          description: profileError.message,
+        });
+        await authService.signOut();
+        return;
+      }
+
+      if (!profile) {
+        toast({
+          variant: "destructive",
+          title: "Perfil não encontrado",
+          description: "Seu perfil de usuário não foi encontrado no sistema.",
+        });
+        await authService.signOut();
+        return;
+      }
+      
+      if (profile.role !== "admin") {
         await authService.signOut();
         toast({
           variant: "destructive",
@@ -45,7 +78,7 @@ export default function AdminLogin() {
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: error.message || "Email ou senha incorretos.",
+        description: error.message || "Erro inesperado. Tente novamente.",
       });
     } finally {
       setLoading(false);
