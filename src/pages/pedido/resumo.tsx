@@ -188,21 +188,30 @@ export default function ResumoPage() {
                   <CardTitle className="text-lg">Itens do Pedido</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {cart.map((item, index) => (
-                      <div key={index} className="flex justify-between items-start pb-3 border-b last:border-b-0">
-                        <div className="flex-1">
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {item.quantity}x R$ {item.price.toFixed(2)}
-                          </p>
-                        </div>
-                        <p className="font-medium">
-                          R$ {(item.price * item.quantity).toFixed(2)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                  {cart.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">Carregando itens...</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {cart.map((item, index) => {
+                        const itemPrice = Number(item.price) || 0;
+                        const itemSubtotal = Number(item.subtotal) || 0;
+                        
+                        return (
+                          <div key={index} className="flex justify-between items-start pb-3 border-b last:border-b-0">
+                            <div className="flex-1">
+                              <p className="font-medium">{item.name || "Produto"}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {item.quantity || 0}x R$ {itemPrice.toFixed(2)}
+                              </p>
+                            </div>
+                            <p className="font-medium">
+                              R$ {itemSubtotal.toFixed(2)}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
