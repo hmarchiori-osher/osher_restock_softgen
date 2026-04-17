@@ -78,12 +78,12 @@ export default function ResumoPage() {
 
   const estimatedDays = isUrgent ? 0 : cart.some((item) => !item.inStock) ? 7 : 2;
 
-  async function handleSubmit() {
-    if (!selectedFreight) {
+  async function handleConfirmOrder() {
+    if (!selectedFreight || cart.length === 0) {
       toast({
         variant: "destructive",
-        title: "Selecione o frete",
-        description: "Escolha uma opção de entrega",
+        title: "Erro",
+        description: "Selecione uma opção de frete antes de confirmar.",
       });
       return;
     }
@@ -91,9 +91,9 @@ export default function ResumoPage() {
     setSubmitting(true);
 
     try {
-      const order = await orderService.create({
-        branch_id: branch.id,
-        items: cart.map((item) => ({
+      console.log("Creating order with data:", {
+        branch_id: branch?.id,
+        items: cart.map(item => ({
           product_id: item.id,
           quantity: item.quantity,
           unit_price: item.price,
@@ -109,21 +109,44 @@ export default function ResumoPage() {
         estimated_delivery_days: estimatedDays,
       });
 
-      // Limpar sessionStorage
-      sessionStorage.removeItem("pedido_branch");
+      const order = await orderService.create({
+        branch_id: branch.id,
+        items: cart.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          unit_price: item.price,
+        })),
+        subtotal,
+        freight_cost: freightCost,
+        urgency_fee: urgencyFee,
+        total,
+        is_urgent: isUrgent,
+        freight_option: selectedFreight,
+        observations: observations || null,
+        status: "new",
+        estimated_delivery_days: estimatedDays,
+      });
+
+      console.log("Order created successfully:", order);
+
+      // Limpar dados do pedido do sessionStorage
       sessionStorage.removeItem("pedido_cart");
       sessionStorage.removeItem("pedido_urgent");
-      sessionStorage.removeItem("pedido_file");
+      
+      // Armazenar ID do pedido criado
+      sessionStorage.setItem("pedido_success_id", order.id);
 
-      // Redirecionar para tela de sucesso
-      router.push(`/pedido/sucesso?order=${order.id}`);
+      // Redirecionar para página de sucesso
+      router.push("/pedido/sucesso");
+      
     } catch (error) {
       console.error("Error creating order:", error);
       toast({
         variant: "destructive",
-        title: "Erro ao confirmar pedido",
-        description: "Tente novamente em alguns instantes",
+        title: "Erro",
+        description: "Não foi possível confirmar o pedido. Tente novamente.",
       });
+    } finally {
       setSubmitting(false);
     }
   }
@@ -345,7 +368,7 @@ export default function ResumoPage() {
                   </div>
 
                   <Button
-                    onClick={handleSubmit}
+                    onClick={handleConfirmOrder}
                     disabled={!selectedFreight || submitting}
                     className="w-full h-12 text-base"
                     style={{
