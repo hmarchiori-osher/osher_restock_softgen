@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { orderService } from "@/services/orderService";
+import { productService } from "@/services/productService";
 import { ArrowLeft, Package, Truck, Clock, FileText, CheckCircle2 } from "lucide-react";
 
 export default function ResumoPage() {
@@ -184,40 +185,24 @@ export default function ResumoPage() {
               {/* Items */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Package className="w-5 h-5" />
-                    Itens do Pedido
-                  </CardTitle>
+                  <CardTitle className="text-lg">Itens do Pedido</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {cart.map((item) => (
-                    <div key={item.id} className="flex items-start gap-4">
-                      {item.photo_url && (
-                        <img
-                          src={item.photo_url}
-                          alt={item.name}
-                          className="w-16 h-16 object-cover rounded border"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <div className="font-medium">{item.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          SKU: {item.sku}
+                <CardContent>
+                  <div className="space-y-3">
+                    {cart.map((item, index) => (
+                      <div key={index} className="flex justify-between items-start pb-3 border-b last:border-b-0">
+                        <div className="flex-1">
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {item.quantity}x R$ {item.price.toFixed(2)}
+                          </p>
                         </div>
-                        <div className="text-sm mt-1">
-                          {item.quantity} {item.unit} × R$ {item.price.toFixed(2)} ={" "}
-                          <span className="font-medium">
-                            R$ {(item.price * item.quantity).toFixed(2)}
-                          </span>
-                        </div>
-                        {!item.inStock && (
-                          <Badge variant="secondary" className="mt-1">
-                            Sob encomenda
-                          </Badge>
-                        )}
+                        <p className="font-medium">
+                          R$ {(item.price * item.quantity).toFixed(2)}
+                        </p>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
 
