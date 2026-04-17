@@ -45,7 +45,8 @@ export default function SucessoPedidoPage() {
     }
   }
 
-  function formatOrderNumber(orderId: string) {
+  function formatOrderNumber(orderId: string, orderNumber?: string) {
+    if (orderNumber) return `#${orderNumber}`;
     return `#${orderId.slice(0, 8).toUpperCase()}`;
   }
 
@@ -124,7 +125,7 @@ export default function SucessoPedidoPage() {
                 Número do Pedido
               </p>
               <p className="text-4xl font-heading font-bold text-accent mb-4">
-                {formatOrderNumber(order.id)}
+                {formatOrderNumber(order.id, order.order_number)}
               </p>
               <Badge variant="secondary" className="text-sm">
                 Status: Aguardando Confirmação
@@ -150,11 +151,11 @@ export default function SucessoPedidoPage() {
                 <span className="text-sm text-muted-foreground">Entrega Prevista</span>
                 <div className="text-right">
                   <p className="font-medium">{formatEstimatedDelivery(order.estimated_delivery)}</p>
-                  {order.is_urgent && (
+                  {(order.urgent_fee && order.urgent_fee > 0) ? (
                     <Badge variant="default" className="mt-1 bg-accent">
                       Entrega Urgente
                     </Badge>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
