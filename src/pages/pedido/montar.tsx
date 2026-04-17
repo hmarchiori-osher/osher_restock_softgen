@@ -166,16 +166,43 @@ export default function MontarPedidoPage() {
       toast({
         variant: "destructive",
         title: "Carrinho vazio",
-        description: "Adicione pelo menos um produto ao carrinho.",
+        description: "Adicione pelo menos um produto antes de continuar.",
       });
       return;
     }
 
-    // Salvar carrinho e configurações no sessionStorage
-    sessionStorage.setItem("pedido_cart", JSON.stringify(cart));
-    sessionStorage.setItem("pedido_urgent", JSON.stringify(isUrgent));
+    console.log("=== SAVING CART TO SESSION STORAGE ===");
+    console.log("Cart data:", cart);
+    console.log("Products data:", products);
     
-    // Redirecionar para resumo
+    // Verificar os dados antes de salvar
+    const cartWithDetails = cart.map(item => {
+      const product = products.find(p => p.id === item.product_id);
+      console.log(`Product ${item.product_id}:`, {
+        found: !!product,
+        name: product?.name,
+        price: product?.price,
+        priceType: typeof product?.price,
+      });
+      return {
+        product_id: item.product_id,
+        quantity: item.quantity,
+        product_name: product?.name,
+        product_price: product?.price,
+      };
+    });
+    
+    console.log("Cart with details:", cartWithDetails);
+
+    // Salvar carrinho no sessionStorage
+    sessionStorage.setItem("pedido_cart", JSON.stringify(cart));
+    sessionStorage.setItem("pedido_urgent", isUrgent.toString());
+    
+    console.log("Saved to sessionStorage:");
+    console.log("pedido_cart:", sessionStorage.getItem("pedido_cart"));
+    console.log("pedido_urgent:", sessionStorage.getItem("pedido_urgent"));
+
+    // Redirecionar para página de resumo
     router.push("/pedido/resumo");
   }
 
